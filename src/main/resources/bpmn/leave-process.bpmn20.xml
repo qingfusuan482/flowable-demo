@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="leave-process" name="请假流程" isExecutable="true">
+
+        <startEvent id="start" name="开始"/>
+
+        <!-- 员工填写请假申请 -->
+        <userTask id="applyLeave" name="填写请假申请"
+                  flowable:assignee="${starter}"
+                  flowable:formFieldValidation="true"/>
+
+        <!-- 部门经理审批 -->
+        <userTask id="managerAudit" name="部门经理审批"
+                  flowable:assignee="${assigneeResolver.resolveByRole('dept_manager', execution)}"/>
+
+        <!-- 判断请假天数是否大于3天 -->
+        <exclusiveGateway id="daysGateway" name="请假天数判断"/>
+
+        <!-- 人事审批（天数>3时） -->
+        <userTask id="hrAudit" name="人事审批"
+                  flowable:assignee="${assigneeResolver.resolveByRole('hr_role', execution)}"/>
+
+        <!-- 归档 -->
+        <userTask id="archive" name="归档"
+                  flowable:assignee="${starter}"/>
+
+        <endEvent id="end" name="结束"/>
+
+        <!-- 连线 -->
+        <sequenceFlow id="flow1" sourceRef="start" targetRef="applyLeave"/>
+        <sequenceFlow id="flow2" sourceRef="applyLeave" targetRef="managerAudit"/>
+
+        <!-- 经理审批通过后的分支 -->
+        <sequenceFlow id="flow3" sourceRef="managerAudit" targetRef="daysGateway"/>
+
+        <!-- 天数 <= 3 跳过人事审批 -->
+        <sequenceFlow id="flow4" sourceRef="daysGateway" targetRef="archive">
+            <conditionExpression xsi:type="tFormalExpression">${days <= 3}</conditionExpression>
+        </sequenceFlow>
+
+        <!-- 天数 > 3 需要人事审批 -->
+        <sequenceFlow id="flow5" sourceRef="daysGateway" targetRef="hrAudit">
+            <conditionExpression xsi:type="tFormalExpression">${days > 3}</conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow6" sourceRef="hrAudit" targetRef="archive"/>
+        <sequenceFlow id="flow7" sourceRef="archive" targetRef="end"/>
+    </process>
+
+</definitions>

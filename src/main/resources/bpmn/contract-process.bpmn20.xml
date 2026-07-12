@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="contract-process" name="合同签订流程" isExecutable="true">
+
+        <startEvent id="start" name="开始"/>
+
+        <!-- 发起人填写合同信息 -->
+        <userTask id="fillContract" name="填写合同信息"
+                  flowable:assignee="${starter}"
+                  flowable:formFieldValidation="true"/>
+
+        <!-- 乙方审批（乙方来自表单字段） -->
+        <userTask id="partyBAudit" name="乙方审批"
+                  flowable:assignee="${assigneeResolver.resolveByVariable('partyB', execution)}"/>
+
+        <!-- 指定人审批 -->
+        <userTask id="designatedAudit" name="指定人审批"
+                  flowable:assignee="${assigneeResolver.resolveByVariable('designatedApprover', execution)}"/>
+
+        <!-- 甲方审批 -->
+        <userTask id="partyAAudit" name="甲方审批"
+                  flowable:assignee="${assigneeResolver.resolveByVariable('partyA', execution)}"/>
+
+        <!-- 归档 -->
+        <userTask id="archive" name="归档"
+                  flowable:assignee="${starter}"/>
+
+        <endEvent id="end" name="结束"/>
+
+        <!-- 连线 -->
+        <sequenceFlow id="flow1" sourceRef="start" targetRef="fillContract"/>
+        <sequenceFlow id="flow2" sourceRef="fillContract" targetRef="partyBAudit"/>
+        <sequenceFlow id="flow3" sourceRef="partyBAudit" targetRef="designatedAudit"/>
+        <sequenceFlow id="flow4" sourceRef="designatedAudit" targetRef="partyAAudit"/>
+        <sequenceFlow id="flow5" sourceRef="partyAAudit" targetRef="archive"/>
+        <sequenceFlow id="flow6" sourceRef="archive" targetRef="end"/>
+    </process>
+
+</definitions>
