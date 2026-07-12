@@ -1,13 +1,24 @@
 package org.example.config;
 
+import lombok.RequiredArgsConstructor;
+import org.example.listener.GlobalProcessCompleteListener;
+import org.example.listener.GlobalTaskCompleteListener;
+import org.example.listener.GlobalTaskCreateListener;
 import org.flowable.common.engine.impl.persistence.StrongUuidGenerator;
 import org.flowable.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.flowable.spring.SpringProcessEngineConfiguration;
 import org.flowable.spring.boot.EngineConfigurationConfigurer;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Configuration
+@RequiredArgsConstructor
 public class FlowableConfig implements EngineConfigurationConfigurer<SpringProcessEngineConfiguration> {
+
+    private final GlobalTaskCreateListener taskCreateListener;
+    private final GlobalTaskCompleteListener taskCompleteListener;
+    private final GlobalProcessCompleteListener processCompleteListener;
 
     @Override
     public void configure(SpringProcessEngineConfiguration config) {
@@ -25,5 +36,12 @@ public class FlowableConfig implements EngineConfigurationConfigurer<SpringProce
 
         // 启用流程定义信息缓存
         config.setEnableProcessDefinitionInfoCache(true);
+
+        // 注册全局事件监听器
+        config.setEventListeners(List.of(
+                taskCreateListener,
+                taskCompleteListener,
+                processCompleteListener
+        ));
     }
 }
