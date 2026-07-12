@@ -15,6 +15,10 @@ public class SecurityUtils {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
+        // "anonymousUser" 代表未认证
+        if ("anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
         return authentication.getName();
     }
 }
